@@ -73,12 +73,18 @@ files it backed up.
 
 ## Status
 
-Tested on one machine (Windows 11, Steam install, a 2560x1080 main monitor with two extra portrait monitors).
-Installer, reinstall and uninstall were tested against a fake game folder and the detection against a real
-Steam install. Other setups (GOG, 4K, 16:9) are untested.
+Verified on a Windows 11 PC (Steam install, 2560x1080 main monitor with two extra portrait monitors):
+
+- The shortcut launches the game fullscreen on the main monitor.
+- The profile screen and the main menu (multiplayer list) display with nothing overlapping. On widescreen monitors the menus are 4:3 with black bars on the sides by design.
+- The Windows key works while the game is focused, and the mouse is not trapped.
+- Install, reinstall and uninstall work, and the installer also ran correctly on a Windows 10 PC with a 4:3 screen.
+
+Not yet tested: GOG or other non-Steam installs, 16:9 / 4K / 16:10 screens with the real game, and in-match gameplay with the Aspect Ratio Hack. If something looks wrong on your setup, open an issue and include your monitor resolution and `GameData\shader patch.log`.
 
 ## Credits and licence
 
 Shader Patch is by PrismaticFlower and is downloaded from its official GitHub releases; see its own licence.
 The BF2 Remaster is by its respective authors. This package only contains the install scripts.
+
 
