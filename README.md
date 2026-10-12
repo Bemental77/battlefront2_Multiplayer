@@ -20,9 +20,15 @@ lets the Windows key, overlays (Discord, NVIDIA, Steam) and screenshots work.
 
 ## Before you start
 
-1. Install Battlefront II (Steam: *Star Wars Battlefront II (Classic, 2005)*).
-2. Run the Remaster installers **in order** (Part 1, then 2, then 3). This package does not replace them.
-3. Close the game.
+1. Own and install Battlefront II (Steam: [*Star Wars Battlefront II (Classic, 2005)*](https://store.steampowered.com/app/6060/)). The game is not included here.
+2. Close the game.
+
+The **BF2 Remaster** (by Harrisonfog, about 4.8 GB, free) is also needed. It is not re-hosted here. `Install.bat` handles it for you:
+it asks whether the Remaster is already installed. If you answer **N**, it opens the
+[official download page](https://www.moddb.com/mods/hd-graphics-mod/downloads/battlefront-2-remaster-installer-10) on ModDB,
+waits for the zip to land in your Downloads folder, unpacks it and runs Part 1, 2 and 3 in order. When each Remaster
+installer asks for the game folder, pick the `GameData` folder the installer shows you.
+Already installed it? Answer **Y** (or run `Install.bat -SkipRemaster`).
 
 ## Install
 
@@ -86,5 +92,6 @@ Not yet tested: GOG or other non-Steam installs, 16:9 / 4K / 16:10 screens with 
 
 Shader Patch is by PrismaticFlower and is downloaded from its official GitHub releases; see its own licence.
 The BF2 Remaster is by its respective authors. This package only contains the install scripts.
+
 
 

@@ -7,12 +7,14 @@
   -GamePath    Path to the GameData folder (auto-detected if omitted)
   -NoShortcut  Do not create the desktop shortcut
   -Version     Shader Patch release tag to install (default: latest)
+  -SkipRemaster  Do not check for / install the BF2 Remaster (use if it is already installed)
   -Elevated    (internal) set when the script relaunches itself as administrator
 #>
 param(
   [string]$GamePath,
   [switch]$NoShortcut,
   [string]$Version = 'latest',
+  [switch]$SkipRemaster,
   [switch]$Elevated
 )
 $ErrorActionPreference = 'Stop'
@@ -70,6 +72,58 @@ if (-not (Test-Path (Join-Path $GamePath 'BattlefrontII.exe'))) {
 }
 Say "Game folder: $GamePath"
 if (Get-Process BattlefrontII -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "$GamePath\*" }) { throw 'Close Battlefront II first, then run this again.' }
+
+# ---- BF2 Remaster (by Harrisonfog) ----------------------------------------------------------
+# The Remaster is a 4.8 GB download hosted by its author on ModDB. It is not bundled or re-hosted here:
+# the installer sends you to the official page, then runs the Remaster installers in order (Part 1, 2, 3).
+$RemasterPage = 'https://www.moddb.com/mods/hd-graphics-mod/downloads/battlefront-2-remaster-installer-10'
+
+function Find-RemasterFiles {
+  $dl = Join-Path $env:USERPROFILE 'Downloads'
+  $zip = Get-ChildItem $dl -Filter 'BF2_Remaster_Installer*.zip' -ErrorAction SilentlyContinue |
+         Where-Object { $_.Length -gt 4GB } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+  $partial = Get-ChildItem $dl -Include '*.crdownload', '*.part', '*.tmp', '*.download' -Recurse -Depth 0 -ErrorAction SilentlyContinue |
+             Where-Object { $_.Name -match 'Remaster' }
+  [pscustomobject]@{ Zip = $zip; Downloading = [bool]$partial; Downloads = $dl }
+}
+
+function Install-Remaster($GamePath) {
+  Say ''
+  Say 'The BF2 Remaster has to be installed first (Part 1, then Part 2, then Part 3).'
+  $ans = Read-Host 'Is the Remaster already installed? [Y = yes, skip / N = no, help me install it]'
+  if ($ans -match '^[Yy]') { return }
+
+  $f = Find-RemasterFiles
+  if (-not $f.Zip) {
+    Say 'Opening the official download page in your browser (ModDB, by the Remaster author).'
+    Say "  $RemasterPage"
+    Say 'Click Download, choose a mirror, and save the zip to your Downloads folder. This window will wait.'
+    Start-Process $RemasterPage
+    $deadline = (Get-Date).AddHours(2)
+    while ((Get-Date) -lt $deadline) {
+      Start-Sleep 10
+      $f = Find-RemasterFiles
+      if ($f.Zip -and -not $f.Downloading) { Start-Sleep 5; break }
+    }
+  }
+  if (-not $f.Zip) { throw 'Remaster zip not found in Downloads after waiting. Download it, then run Install.bat again.' }
+
+  $dest = Join-Path ([IO.Path]::GetTempPath()) 'bf2_remaster_installer'
+  Say "Unpacking $($f.Zip.Name) ... (this takes a few minutes)"
+  Remove-Item $dest -Recurse -Force -ErrorAction SilentlyContinue
+  Expand-Archive $f.Zip.FullName $dest -Force
+  $parts = Get-ChildItem $dest -Recurse -Filter '*.exe' | Where-Object { $_.Name -match 'Part\s*(\d)' } |
+           Sort-Object { [int]([regex]::Match($_.Name, 'Part\s*(\d)').Groups[1].Value) }
+  if (-not $parts) { throw 'No Remaster installer (.exe) found inside the zip.' }
+  foreach ($p in $parts) {
+    Say "Running $($p.Name) ... When it asks for the game folder, choose: $GamePath"
+    Start-Process $p.FullName -Wait
+  }
+  Remove-Item $dest -Recurse -Force -ErrorAction SilentlyContinue
+  Say 'Remaster installers finished.'
+}
+
+if (-not $SkipRemaster -and -not $Elevated) { Install-Remaster $GamePath }
 
 # ---- system checks --------------------------------------------------------------------------
 $build = [Environment]::OSVersion.Version.Build
